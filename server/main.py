@@ -352,7 +352,54 @@ def handle_analysis_request():
         print(f"Error in handle_analysis_request: {e}")
         emit('error', {'message': 'Failed to get analysis data'})
         
+@app.route('/get_latest_session_data', methods=['GET'])
+def get_latest_session_data():
+    """Get time series data from the latest session"""
+    if not streaming_sessions:
+        return jsonify([]), 200
         
+    latest_session = streaming_sessions[-1]
+    start_time = datetime.fromisoformat(latest_session['start_time'].replace('Z', '+00:00'))
+    end_time = datetime.fromisoformat(latest_session['end_time'].replace('Z', '+00:00'))
+    
+    # Ambil data dari Firebase untuk range waktu tersebut
+    try:
+        spine_ref = db.reference('/deteksi/spine')
+        sit_ref = db.reference('/deteksi/sit')
+        
+        # Query data dalam range waktu sesi terakhir
+        spine_data = spine_ref.order_by_key().start_at(
+            start_time.strftime("%Y-%m-%d %H:%M:%S")
+        ).end_at(
+            end_time.strftime("%Y-%m-%d %H:%M:%S")
+        ).get()
+        
+        sit_data = sit_ref.order_by_key().start_at(
+            start_time.strftime("%Y-%m-%d %H:%M:%S")
+        ).end_at(
+            end_time.strftime("%Y-%m-%d %H:%M:%S")
+        ).get()
+        
+        if not spine_data or not sit_data:
+            return jsonify([]), 200
+            
+        # Gabungkan data
+        time_series = []
+        for timestamp in spine_data.keys():
+            time_series.append({
+                'timestamp': timestamp,
+                'diagnosis_spine': spine_data[timestamp],
+                'diagnosis_sit': sit_data.get(timestamp, 'unknown')
+            })
+            
+        # Sort berdasarkan timestamp
+        time_series.sort(key=lambda x: x['timestamp'])
+        
+        return jsonify(time_series), 200
+        
+    except Exception as e:
+        print(f"Error fetching time series data: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=8080, debug=True)
