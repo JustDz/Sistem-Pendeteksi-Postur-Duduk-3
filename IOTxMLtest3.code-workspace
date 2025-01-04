@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "../IOTxML"
+	}
+],
+  "settings": {
+    "liveServer.settings.multiRootWorkspaceName": "IOTxML"
+  }
+}

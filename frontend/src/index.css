@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Roseford";
+  src: url("/src/assets/Roseford.ttf");
+}
+
+@font-face {
+    font-family: "Freudian";
+    src: url("/src/assets/Freudian.ttf");
+  }
