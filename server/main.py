@@ -53,6 +53,19 @@ streaming_sessions = []
 streaming_start_time = None
 streaming_end_time = None
 
+posture_counts = {
+    "sit": {"good": 0, "bad": 0},
+    "spine": {"normal": 0, "lordosis": 0, "kifosis": 0}
+}
+
+def reset_posture_counts():
+    """Reset posture counts for new session"""
+    global posture_counts
+    posture_counts = {
+        "sit": {"good": 0, "bad": 0},
+        "spine": {"normal": 0, "lordosis": 0, "kifosis": 0}
+    }
+
 @socketio.on('connect')
 def handle_connect(auth):
     """Handle client connection"""
@@ -114,7 +127,7 @@ def update_firebase(diagnosis_spine, diagnosis_sit, pose_data, timestamp):
 
 def generate_frames():
     """Generate video frames with pose detection and real-time analysis"""
-    global is_streaming, current_diagnosis_sit, current_diagnosis_spine
+    global is_streaming, current_diagnosis_sit, current_diagnosis_spine, posture_counts
     
     with mp_holistic.Holistic(min_detection_confidence=0.3, min_tracking_confidence=0.3) as holistic:
         while is_streaming:
@@ -137,10 +150,25 @@ def generate_frames():
                     diagnosis_sit = model_sit.predict(pose_df)[0]
                     proba_spine = model_spine.predict_proba(pose_df)[0]
                     proba_sit = model_sit.predict_proba(pose_df)[0]
+                    
+                    # Update posture counts
+                    posture_counts["sit"][diagnosis_sit] += 1
+                    posture_counts["spine"][diagnosis_spine] += 1
 
                     # Update current diagnoses
                     current_diagnosis_spine = diagnosis_spine
                     current_diagnosis_sit = diagnosis_sit
+                    
+                    total_sit = sum(posture_counts["sit"].values())
+                    total_spine = sum(posture_counts["spine"].values())
+                    
+                    sit_percentages = {k: (v/total_sit)*100 if total_sit > 0 else 0 
+                                     for k, v in posture_counts["sit"].items()}
+                    spine_percentages = {k: (v/total_spine)*100 if total_spine > 0 else 0 
+                                       for k, v in posture_counts["spine"].items()}
+                    
+                    dominant_sit = max(posture_counts["sit"].items(), key=lambda x: x[1])[0]
+                    dominant_spine = max(posture_counts["spine"].items(), key=lambda x: x[1])[0]
 
                     # Update Firebase
                     update_firebase(diagnosis_spine, diagnosis_sit, 
@@ -153,6 +181,10 @@ def generate_frames():
                         'diagnosis_spine': diagnosis_spine,
                         'probability_sit': proba_sit.tolist(),
                         'probability_spine': proba_spine.tolist(),
+                        'dominant_sit': dominant_sit,
+                        'dominant_spine': dominant_spine,
+                        'sit_percentages': sit_percentages,
+                        'spine_percentages': spine_percentages,
                         'saran': "Pertahankan posisi tubuh Anda tetap tegak." 
                                 if diagnosis_sit == "Baik" 
                                 else "Perbaiki posisi duduk Anda."
@@ -183,9 +215,12 @@ def video_feed():
 @app.route('/start_feed', methods=['POST'])
 def start_feed():
     """Start video streaming and record start time"""
-    global is_streaming, streaming_start_time
+    global is_streaming, streaming_start_time, start_time
     is_streaming = True
     streaming_start_time = datetime.now(pytz.timezone('Asia/Jakarta'))
+    start_time = streaming_start_time  # Store start time for duration calculation
+    reset_posture_counts()
+    print(f"Streaming started at: {start_time}")
     
     return jsonify({
         "message": "Streaming started",
@@ -199,45 +234,93 @@ def start_feed():
 #     is_streaming = False
 #     return jsonify({"message": "Streaming stopped"}), 200
 
-@app.route('/stop_feed', methods=['POST'])
+@app.route('/stop_feed', methods=['POST', 'OPTIONS'])  # Tambahkan OPTIONS
 def stop_feed():
-    """Stop video streaming and record end time"""
-    global is_streaming, streaming_start_time, streaming_end_time, streaming_sessions
-    is_streaming = False
+    """Stop video streaming and calculate duration"""
+    global is_streaming, streaming_start_time, streaming_end_time, streaming_sessions, start_time, streaming_duration
     
-    if streaming_start_time:
-        streaming_end_time = datetime.now(pytz.timezone('Asia/Jakarta'))
-        duration = streaming_end_time - streaming_start_time
-        duration_seconds = duration.total_seconds()
+    # Handle CORS preflight request
+    if request.method == 'OPTIONS':
+        response = app.make_default_options_response()
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        return response
+
+    try:
+        is_streaming = False
         
-        # Format duration
-        hours = int(duration_seconds // 3600)
-        minutes = int((duration_seconds % 3600) // 60)
-        seconds = int(duration_seconds % 60)
-        
-        # Save session data to list
-        session_data = {
-            'start_time': streaming_start_time.isoformat(),
-            'end_time': streaming_end_time.isoformat(),
-            'duration': {
-                'hours': hours,
-                'minutes': minutes,
-                'seconds': seconds,
-                'total_seconds': duration_seconds
+        if start_time:
+            streaming_end_time = datetime.now(pytz.timezone('Asia/Jakarta'))
+            duration = streaming_end_time - start_time
+            streaming_duration = duration.total_seconds()
+            
+            # Format duration
+            hours = int(streaming_duration // 3600)
+            minutes = int((streaming_duration % 3600) // 60)
+            seconds = int(streaming_duration % 60)
+            
+            total_sit = sum(posture_counts["sit"].values())
+            total_spine = sum(posture_counts["spine"].values())
+            
+            sit_stats = {k: (v/total_sit)*100 if total_sit > 0 else 0 
+                         for k, v in posture_counts["sit"].items()}
+            spine_stats = {k: (v/total_spine)*100 if total_spine > 0 else 0 
+                           for k, v in posture_counts["spine"].items()}
+            
+            dominant_sit = max(posture_counts["sit"].items(), key=lambda x: x[1])[0]
+            dominant_spine = max(posture_counts["spine"].items(), key=lambda x: x[1])[0]
+            
+            session_data = {
+                'start_time': start_time.isoformat(),
+                'end_time': streaming_end_time.isoformat(),
+                'duration': {
+                    'hours': hours,
+                    'minutes': minutes,
+                    'seconds': seconds,
+                    'total_seconds': streaming_duration
+                },
+                'posture_statistics': {
+                    'sit': sit_stats,
+                    'spine': spine_stats,
+                    'dominant_sit': dominant_sit,
+                    'dominant_spine': dominant_spine,
+                    'raw_counts': posture_counts
+                }
             }
-        }
-        streaming_sessions.append(session_data)
+            streaming_sessions.append(session_data)
+            
+            # Reset timestamps and counters
+            start_time = None
+            reset_posture_counts()
+
+            # Print statistics
+            print(f"\nStreaming Duration: {hours:02d}:{minutes:02d}:{seconds:02d}")
+            print(f"Posture Statistics:")
+            print(f"Sitting Position - Good: {sit_stats['good']:.1f}%, Bad: {sit_stats['bad']:.1f}%")
+            print(f"Spine Position - Normal: {spine_stats['normal']:.1f}%, Lordosis: {spine_stats['lordosis']:.1f}%, Kifosis: {spine_stats['kifosis']:.1f}%")
+            print(f"Dominant Sitting Position: {dominant_sit}")
+            print(f"Dominant Spine Position: {dominant_spine}")
+            
+            response = jsonify({
+                "message": "Streaming stopped successfully",
+                "duration": f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+                "duration_seconds": streaming_duration,
+                "posture_statistics": {
+                    'sit': sit_stats,
+                    'spine': spine_stats,
+                    'dominant_sit': dominant_sit,
+                    'dominant_spine': dominant_spine
+                }
+            })
+            
+            # Set CORS headers
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response, 200
+            
+        return jsonify({"message": "Streaming stopped (no session data available)"}), 200
         
-        # Reset timestamps
-        streaming_start_time = None
-        streaming_end_time = None
-        
-        return jsonify({
-            "message": "Streaming stopped",
-            "duration": f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-        }), 200
-    
-    return jsonify({"message": "Streaming stopped (no session data available)"}), 200
+    except Exception as e:
+        print(f"Error stopping stream: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 # @app.route('/get_diagnosis', methods=['GET'])
 # def get_diagnosis():
@@ -268,6 +351,8 @@ def handle_analysis_request():
     except Exception as e:
         print(f"Error in handle_analysis_request: {e}")
         emit('error', {'message': 'Failed to get analysis data'})
+        
+        
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=8080, debug=True)

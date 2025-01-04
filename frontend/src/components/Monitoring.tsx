@@ -1,14 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { Reveal } from "../animate/Reveal";
 
+interface PostureStats {
+  sit: {
+    [key: string]: number;
+    good: number;
+    bad: number;
+  };
+  spine: {
+    [key: string]: number;
+    normal: number;
+    lordosis: number;
+    kifosis: number;
+  };
+  dominant_sit: string;
+  dominant_spine: string;
+  raw_counts: {
+    sit: { [key: string]: number };
+    spine: { [key: string]: number };
+  };
+}
+
 interface StreamingSession {
   start_time: string;
-  end_time?: string;
-  duration?: {
+  end_time: string;
+  duration: {
     hours: number;
     minutes: number;
     seconds: number;
+    total_seconds: number;
   };
+  posture_statistics: PostureStats;
 }
 
 const DashboardMonitoring: React.FC = () => {
@@ -55,6 +77,63 @@ const DashboardMonitoring: React.FC = () => {
       String(seconds).padStart(2, '0')}`;
   };
 
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
+  const renderPostureStats = (stats: PostureStats) => {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-lg font-medium mb-2">Posisi Duduk</h4>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-gray-700 p-3 rounded">
+              <p className="text-sm">Baik</p>
+              <p className="text-lg font-semibold">{formatPercentage(stats.sit.good)}</p>
+            </div>
+            <div className="bg-gray-700 p-3 rounded">
+              <p className="text-sm">Buruk</p>
+              <p className="text-lg font-semibold">{formatPercentage(stats.sit.bad)}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4 className="text-lg font-medium mb-2">Posisi Tulang Punggung</h4>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-gray-700 p-3 rounded">
+              <p className="text-sm">Normal</p>
+              <p className="text-lg font-semibold">{formatPercentage(stats.spine.normal)}</p>
+            </div>
+            <div className="bg-gray-700 p-3 rounded">
+              <p className="text-sm">Lordosis</p>
+              <p className="text-lg font-semibold">{formatPercentage(stats.spine.lordosis)}</p>
+            </div>
+            <div className="bg-gray-700 p-3 rounded">
+              <p className="text-sm">Kifosis</p>
+              <p className="text-lg font-semibold">{formatPercentage(stats.spine.kifosis)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-md font-medium mb-1">Posisi Dominan Duduk</h4>
+            <p className="text-lg capitalize bg-blue-500 bg-opacity-20 p-2 rounded">
+              {stats.dominant_sit}
+            </p>
+          </div>
+          <div>
+            <h4 className="text-md font-medium mb-1">Posisi Dominan Punggung</h4>
+            <p className="text-lg capitalize bg-blue-500 bg-opacity-20 p-2 rounded">
+              {stats.dominant_spine}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <section className="bg-body-clr text-white min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -69,31 +148,37 @@ const DashboardMonitoring: React.FC = () => {
           <Reveal>
             <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
               <h2 className="text-2xl font-semibold mb-6 text-center">
-                Status Monitoring
+                Sesi Terakhir
               </h2>
 
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-medium mb-2">Status Saat Ini</h3>
-                  <p className="text-lg">
-                    Postur: <span className="font-semibold text-green-500">Baik</span>
-                  </p>
-                  <p className="text-sm text-gray-300">
-                    Durasi: {formatDuration(latestSession?.duration)}
-                  </p>
-                </div>
+                {latestSession ? (
+                  <>
+                    <div>
+                      <h3 className="text-xl font-medium mb-4">Informasi Sesi</h3>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-300">
+                          Mulai: {formatTime(latestSession.start_time)}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          Selesai: {formatTime(latestSession.end_time)}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          Durasi: {formatDuration(latestSession.duration)}
+                        </p>
+                      </div>
+                    </div>
 
-                <div>
-                  <h3 className="text-xl font-medium mb-2">Waktu Sesi</h3>
-                  <p className="text-sm text-gray-300">
-                    Mulai: {formatTime(latestSession?.start_time)}
-                  </p>
-                  {latestSession?.end_time && (
-                    <p className="text-sm text-gray-300">
-                      Selesai: {formatTime(latestSession.end_time)}
-                    </p>
-                  )}
-                </div>
+                    {latestSession.posture_statistics && (
+                      <div>
+                        <h3 className="text-xl font-medium mb-4">Statistik Postur</h3>
+                        {renderPostureStats(latestSession.posture_statistics)}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-center text-gray-400">Belum ada sesi yang tercatat</p>
+                )}
               </div>
             </div>
           </Reveal>
@@ -111,6 +196,7 @@ const DashboardMonitoring: React.FC = () => {
                     <tr className="bg-gray-700">
                       <th className="px-4 py-2 text-left">Waktu</th>
                       <th className="px-4 py-2 text-left">Durasi</th>
+                      <th className="px-4 py-2 text-left">Postur Dominan</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -118,11 +204,14 @@ const DashboardMonitoring: React.FC = () => {
                       <tr key={idx} className="border-b border-gray-700">
                         <td className="px-4 py-2">{formatTime(session.start_time)}</td>
                         <td className="px-4 py-2">{formatDuration(session.duration)}</td>
+                        <td className="px-4 py-2 capitalize">
+                          {session.posture_statistics?.dominant_sit || '-'}
+                        </td>
                       </tr>
                     ))}
                     {sessionHistory.length === 0 && (
                       <tr>
-                        <td colSpan={2} className="px-4 py-4 text-center text-gray-400">
+                        <td colSpan={3} className="px-4 py-4 text-center text-gray-400">
                           Belum ada riwayat sesi
                         </td>
                       </tr>
@@ -134,15 +223,36 @@ const DashboardMonitoring: React.FC = () => {
           </Reveal>
         </div>
 
-        {/* Chart Panel */}
+        {/* Statistics Summary Panel */}
         <Reveal>
           <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
             <h2 className="text-2xl font-semibold mb-6 text-center">
-              Grafik Postur
+              Rangkuman Statistik
             </h2>
-            <div className="bg-gray-700 w-full h-64 rounded-lg flex items-center justify-center">
-              <span className="text-gray-400">Data Grafik Postur</span>
-            </div>
+            {sessionHistory.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gray-700 p-4 rounded">
+                  <h3 className="text-lg font-medium mb-2">Total Sesi</h3>
+                  <p className="text-3xl font-bold">{sessionHistory.length}</p>
+                </div>
+                <div className="bg-gray-700 p-4 rounded">
+                  <h3 className="text-lg font-medium mb-2">Total Waktu</h3>
+                  <p className="text-3xl font-bold">
+                    {formatDuration({
+                      hours: Math.floor(sessionHistory.reduce((acc, session) => 
+                        acc + (session.duration?.total_seconds || 0), 0) / 3600),
+                      minutes: Math.floor((sessionHistory.reduce((acc, session) => 
+                        acc + (session.duration?.total_seconds || 0), 0) % 3600) / 60),
+                      seconds: Math.floor(sessionHistory.reduce((acc, session) => 
+                        acc + (session.duration?.total_seconds || 0), 0) % 60)
+                    })}
+                  </p>
+                </div>
+                {/* Add more summary stats here if needed */}
+              </div>
+            ) : (
+              <p className="text-center text-gray-400">Belum ada data statistik</p>
+            )}
           </div>
         </Reveal>
       </div>
