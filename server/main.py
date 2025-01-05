@@ -21,8 +21,8 @@ mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
 
 # Load classification models
-model_spine = joblib.load("kelainan_tulang_classify.pkl")["Logistic Regression"]
-model_sit = joblib.load("good_bad.pkl")["Logistic Regression"]
+model_spine = joblib.load("spine (1).pkl")
+model_sit = joblib.load("sit (1).pkl")
 
 # Firebase setup
 if not firebase_admin._apps:
@@ -186,8 +186,8 @@ def generate_frames():
                         'sit_percentages': sit_percentages,
                         'spine_percentages': spine_percentages,
                         'saran': "Pertahankan posisi tubuh Anda tetap tegak." 
-                                if diagnosis_sit == "Baik" 
-                                else "Perbaiki posisi duduk Anda."
+                                if diagnosis_sit == "good" 
+                                else "Hindari membungkuk, memiringkan kepala, atau menggantungkan kaki saat duduk. Pastikan punggung lurus, pandangan ke depan, dan kaki menapak rata di lantai. Gunakan kursi yang mendukung punggung dan lakukan peregangan rutin untuk mencegah ketegangan otot."
                     }
                     
                     # Emit to all connected clients

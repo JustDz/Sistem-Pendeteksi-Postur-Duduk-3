@@ -11,9 +11,9 @@ const Navbar = () => {
       const scrollPercentage =
         (scrollPosition / (documentHeight - windowHeight)) * 100;
 
-      if (scrollPercentage < 35) {
+      if (scrollPercentage < 20) {
         setIsScrolled(false);
-      } else if (scrollPercentage >= 35 && scrollPercentage < 80) {
+      } else if (scrollPercentage >= 20 && scrollPercentage < 70) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -23,6 +23,18 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNavClick = (e) => {
+    e.preventDefault();
+    const targetId = e.target.getAttribute("href").slice(1);
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
   return (
     <header
@@ -52,6 +64,7 @@ const Navbar = () => {
           <li>
             <a
               href="#Hero"
+              onClick={handleNavClick}
               className="font-heading tracking-wider text-lg hover:text-gray-500 transition-colors duration-350">
               Home
             </a>
@@ -59,6 +72,7 @@ const Navbar = () => {
           <li>
             <a
               href="#About"
+              onClick={handleNavClick}
               className="font-heading tracking-wider text-lg hover:text-gray-500 transition-colors duration-350">
               About
             </a>
@@ -66,6 +80,7 @@ const Navbar = () => {
           <li>
             <a
               href="#Monitoring"
+              onClick={handleNavClick}
               className="font-heading tracking-wider text-lg hover:text-gray-500 transition-colors duration-350">
               Monitoring
             </a>

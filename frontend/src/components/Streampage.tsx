@@ -46,7 +46,7 @@ const StreamPage = () => {
   const [diagnosisSpine, setDiagnosisSpine] =
     useState<string>("Tidak tersedia");
   const [saran, setSaran] = useState<string>(
-    "Pastikan posisi tubuh tegak dan mata sejajar dengan layar."
+    "Pastikan posisi tubuh tegak"
   );
 
   // Duration state
@@ -314,7 +314,7 @@ const StreamPage = () => {
           </div>
 
           <div className="p-3 rounded-lg bg-purple-100">
-            <h4 className="font-semibold mb-2">Tulang Punggung:</h4>
+            <h4 className="font-semibold mb-2">Tulang Belakang:</h4>
             <p>Posisi Dominan: {dominantSpine || "Tidak tersedia"}</p>
             <div className="mt-2">
               <div className="flex justify-between mb-1">
@@ -352,6 +352,10 @@ const StreamPage = () => {
       </div>
     );
   };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
     <div className="fixed top-0 w-full z-50 h-[100vh] bg-first-bg">
@@ -381,9 +385,18 @@ const StreamPage = () => {
           <div className="flex flex-row gap-10 w-full max-w-7xl mx-auto justify-center items-start px-4">
             {/* Stream Box - Left */}
             <div className="flex flex-col items-center p-6 rounded-lg shadow-lg text-center bg-gray-800 w-2/3 h-[80vh]">
-              <h2 className="font-text text-heading-clr text-2xl font-bold mb-5">
-                Live Streaming {isConnected ? "(Connected)" : "(Disconnected)"}
-              </h2>
+              <div className="flex items-center justify-center space-x-4 mb-5">
+                <h2 className="font-text text-heading-clr text-2xl font-bold">
+                  Live Streaming{" "}
+                  {isConnected ? "(Connected)" : "(Disconnected)"}
+                </h2>
+                <button
+                  onClick={openModal}
+                  className="group flex items-center justify-center disabled:opacity-50 ring-none rounded-full shadow-lg py-2 px-4 transform transition-all duration-300 ease-in-out hover:scale-110 bg-transparent mt-[-4px]">
+                  <i className="bx bx-info-circle text-3xl text-yellow-300 group-hover:text-yellow-600"></i>
+                </button>
+              </div>
+
               <div className="stream-box mb-2 rounded-lg overflow-hidden bg-transparant w-full h-[450px] border-2 border-heading-clr">
                 {isStreaming && videoSource ? (
                   <img
@@ -407,6 +420,47 @@ const StreamPage = () => {
                   </div>
                 )}
               </div>
+              {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl mb-4 ">
+                    <h2 className="text-2xl font-bold mb-8 text-white">
+                      Cara Kerja Sistem
+                    </h2>
+                    <ol className="text-left list-decimal list-inside text-white mb-4 space-y-4">
+                      <li>
+                        Tekan tombol <strong>"Mulai Streaming"</strong> untuk
+                        menyalakan kamera.
+                      </li>
+                      <li>
+                        Hadapkan tubuh Anda menyamping ke kamera agar sistem
+                        dapat mendeteksi postur.
+                      </li>
+                      <li>
+                        Sistem akan menganalisis posisi duduk dan tulang
+                        belakang Anda secara real-time.
+                      </li>
+                      <li>
+                        Hasil diagnosa dan saran akan ditampilkan di layar
+                        bersama statistik postur.
+                      </li>
+                      <li>
+                        Tekan tombol <strong>"Hentikan Streaming"</strong> untuk
+                        menghentikan streaming.
+                      </li>
+                      <li>
+                        Anda dapat melihat hasil monitoring dari postur duduk anda dengan menekan tombol <strong>"Kembali ke Home"</strong> dan pergi ke menu <strong>Monitoring Postur Duduk</strong>
+                      </li>
+                    </ol>
+                    <div className="mt-6 flex justify-end">
+                      <button
+                        onClick={closeModal}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200">
+                        Tutup
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Duration Display */}
               <div className="mt-4 font-text text-heading-clr text-xl">
@@ -436,7 +490,7 @@ const StreamPage = () => {
             {/* Output and Suggestions Box - Right */}
             <div className="flex flex-col justify-start bg-gray-800 p-5 rounded-lg shadow-lg w-full md:w-1/2 lg:w-1/3 h-[80vh] overflow-y-auto">
               {/* Section: Sitting Diagnosis */}
-              <div className="font-text mt-10">
+              <div className="font-text mt-4">
                 <h3 className="text-xl font-semibold text-heading-clr mb-3">
                   Diagnosis Posisi Duduk
                 </h3>
@@ -451,7 +505,7 @@ const StreamPage = () => {
               {/* Section: Spine Diagnosis */}
               <div className="font-text mt-6">
                 <h3 className="text-xl font-semibold text-heading-clr mb-3">
-                  Diagnosis Tulang Punggung
+                  Diagnosis Tulang Belakang
                 </h3>
                 <div
                   className={`p-3 rounded-lg ${

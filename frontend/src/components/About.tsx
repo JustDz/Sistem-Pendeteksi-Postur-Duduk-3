@@ -6,9 +6,9 @@ const About = () => {
   return (
     <section id="About">
       <div className="bg-second-bg relative">
-        <div className=" py-12 font-poppins">
+        <div className="py-12 font-poppins">
           {/* Max-width container with padding */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <header className="text-center">
               {/*--------------- Pengenalan sistem ---------------*/}
               <Reveal>
@@ -67,7 +67,7 @@ const About = () => {
               </div>
 
               {/* Posisi Duduk yang Buruk */}
-              <div className="flex flex-col lg:flex-row justify-between items-start space-y-6 lg:space-y-0">
+              <div className="mb-5 flex flex-col lg:flex-row justify-between items-start space-y-6 lg:space-y-0">
                 {/* Gambar */}
                 <div className="flex-2 lg:order-2 mb-6 lg:mb-0">
                   <Reveal>
@@ -101,6 +101,85 @@ const About = () => {
                       disembuhkan dan memengaruhi kualitas hidup.
                     </p>
                   </Reveal>
+                </div>
+              </div>
+
+              {/*--------------- Penyakit Posisi Duduk ---------------*/}
+              <div className="space-y-6">
+                <Reveal>
+                  <h2 className="tracking-wider font-text text-5xl font-semibold text-font-clr text-center mb-6">
+                    Penyakit Akibat Posisi Duduk
+                  </h2>
+                </Reveal>
+
+                {/* Kifosis */}
+                <div className="mb-10 flex flex-col lg:flex-row justify-between items-start">
+                  <div className="flex-2 lg:order-1 mb-6">
+                    <Reveal>
+                      <img
+                        src="/assets/kifosis.jpg"
+                        alt="Kifosis"
+                        className="max-w-[300px] mx-auto rounded-lg shadow-lg mr-6"
+                      />
+                    </Reveal>
+                  </div>
+
+                  <div className="ml-5 flex-1 lg:order-2 text-left">
+                    <Reveal>
+                      <h3 className="tracking-wider font-text text-4xl font-semibold text-font-clr">
+                        Kifosis
+                      </h3>
+                    </Reveal>
+
+                    <Reveal>
+                      <p className="font-text mt-4 text-lg text-font-clr font-normal text-justify">
+                        Kifosis adalah kelainan tulang belakang di mana punggung
+                        atas melengkung secara berlebihan ke arah depan,
+                        menciptakan postur membungkuk atau bungkuk. Kondisi ini
+                        sering terjadi akibat kebiasaan duduk yang buruk dalam
+                        waktu lama, seperti membungkuk ke depan saat menggunakan
+                        komputer atau smartphone. Kifosis dapat menyebabkan
+                        nyeri punggung, ketegangan otot, kesulitan bernapas, dan
+                        dalam kasus yang parah dapat mempengaruhi fungsi organ
+                        internal.
+                      </p>
+                    </Reveal>
+                  </div>
+                </div>
+
+                {/* Lordosis */}
+                <div className="flex flex-col lg:flex-row justify-between items-start my-10 ">
+                  <div className="flex-2 lg:order-2 mb-6 lg:mb-0">
+                    <Reveal>
+                      <img
+                        src="/assets/lordosis.jpg"
+                        alt="Lordosis"
+                        className="max-w-[300px] mx-auto rounded-lg shadow-lg ml-6"
+                      />
+                    </Reveal>
+                  </div>
+
+                  <div className="mr-5 flex-1 text-left lg:order-1">
+                    <Reveal>
+                      <h3 className="tracking-wider font-text text-4xl font-semibold text-font-clr">
+                        Lordosis
+                      </h3>
+                    </Reveal>
+
+                    <Reveal>
+                      <p className="font-text mt-4 text-lg text-font-clr font-normal text-justify">
+                        Lordosis adalah kondisi di mana tulang belakang bagian
+                        bawah melengkung secara berlebihan ke arah dalam,
+                        menyebabkan postur yang terlalu menekuk ke belakang.
+                        Kondisi ini dapat disebabkan oleh posisi duduk yang
+                        buruk, terutama ketika duduk tanpa dukungan lumbar yang
+                        tepat atau duduk terlalu lama. Lordosis dapat
+                        mengakibatkan nyeri punggung bawah, ketegangan otot,
+                        masalah keseimbangan, dan dapat mempengaruhi kemampuan
+                        melakukan aktivitas sehari-hari.
+                      </p>
+                    </Reveal>
+                  </div>
                 </div>
               </div>
             </div>
